@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bitácora Medidas">
+    <title>Bitácora: Composición + Ciclo + Síntomas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+            padding-top: calc(20px + env(safe-area-inset-top));
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #ddd;
+            background: #f8f9fa;
+            overflow-x: auto;
+        }
+        
+        .tab-button {
+            flex: 0 0 auto;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .content {
+            padding: 20px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .input-row-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .slider-group {
+            margin-bottom: 12px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        .measurement-card {
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .measurement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+        
+        .measurement-date {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .measurement-body {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .measurement-stat {
+            text-align: center;
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .stat-label {
+            color: #999;
+            display: block;
+            font-size: 10px;
+            margin-bottom: 3px;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .stat-change {
+            font-size: 10px;
+            color: #667eea;
+            margin-top: 2px;
+        }
+        
+        .cycle-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .cycle-menstrual { background: #ffe6e6; color: #c41e3a; }
+        .cycle-follicular { background: #e6f3ff; color: #0066cc; }
+        .cycle-ovulation { background: #fff4e6; color: #cc6600; }
+        .cycle-luteal { background: #f0e6ff; color: #6600cc; }
+        
+        .symptoms-box {
+            background: #e8f4f8;
+            border-left: 4px solid #0066cc;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .symptoms-box strong {
+            color: #0066cc;
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .interpretation {
+            background: #e8f4f8;
+            border-left: 4px solid #0066cc;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .interpretation-title {
+            font-weight: 600;
+            color: #0066cc;
+            margin-bottom: 6px;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .remove-btn {
+            background: #ff6b6b;
+            padding: 5px 8px;
+            font-size: 11px;
+            width: auto;
+            flex-shrink: 0;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-bottom: 20px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 8px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .comparison-table th {
+            background: #f0f4ff;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .comparison-table td:first-child,
+        .comparison-table th:first-child {
+            text-align: left;
+        }
+        
+        .green { color: #51cf66; font-weight: 600; }
+        .red { color: #ff6b6b; font-weight: 600; }
+        .neutral { color: #999; }
+        
+        .tips {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #856404;
+        }
+        
+        .tips strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+        
+        .summary-box {
+            background: #f0f4ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-top: 3px solid #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .input-row,
+            .input-row-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .tab-button {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Bitácora Composición + Ciclo</h1>
+            <p>Medidas + Síntomas Hormonales + Interpretación</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('rhino')">⚖️ Mediciones</button>
+            <button class="tab-button" onclick="switchTab('cycle')">🔄 Ciclo</button>
+            <button class="tab-button" onclick="switchTab('comparativas')">🔍 Comparativas</button>
+            <button class="tab-button" onclick="switchTab('analytics')">📈 Progreso</button>
+        </div>
+        
+        <!-- TAB 1: MEDICIONES RHINO + SÍNTOMAS -->
+        <div id="rhino" class="tab-content active">
+            <div class="content">
+                <div class="section">
+                    <div class="section-title">Nueva Medición</div>
+                    <div class="input-group">
+                        <label>Fecha</label>
+                        <input type="date" id="measureDate">
+                    </div>
+                    <div class="input-row-3">
+                        <div class="input-group">
+                            <label>Peso (kg)</label>
+                            <input type="number" id="rhiWeight" min="30" max="200" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>% Grasa</label>
+                            <input type="number" id="rhiBodyFat" min="5" max="60" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Músculo (kg)</label>
+                            <input type="number" id="rhiMuscleMass" min="15" max="100" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <div class="input-row-3">
+                        <div class="input-group">
+                            <label>Lean Mass (kg)</label>
+                            <input type="number" id="rhiLeanMass" min="20" max="120" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Grasa Visceral</label>
+                            <input type="number" id="rhiVisceralFat" min="0" max="20" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>% Agua</label>
+                            <input type="number" id="rhiBodyWater" min="30" max="70" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Síntomas Hormonales</div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Retención de Agua</span>
+                            <span id="retentionValue">5</span>/10
+                        </div>
+                        <input type="range" id="retention" min="1" max="10" value="5" onchange="updateSliderValue('retention')">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Inflamación</span>
+                            <span id="inflationValue">5</span>/10
+                        </div>
+                        <input type="range" id="inflation" min="1" max="10" value="5" onchange="updateSliderValue('inflation')">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>Energía</span>
+                            <span id="energyValue">Normal</span>
+                        </div>
+                        <select id="energy">
+                            <option value="Baja">Baja</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="Alta">Alta</option>
+                        </select>
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">Apetito</div>
+                        <select id="appetite">
+                            <option value="Disminuido">Disminuido</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="Aumentado">Aumentado</option>
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cravings">
+                            <label for="cravings">Antojos de dulce</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bloating">
+                            <label for="bloating">Hinchazón</label>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Notas adicionales</label>
+                        <textarea id="notes" placeholder="Otros síntomas o cambios que notes..."></textarea>
+                    </div>
+                </div>
+                
+                <button onclick="addMeasurement()">+ Registrar Medición</button>
+                
+                <div class="section" style="margin-top: 20px;">
+                    <div class="section-title">Historial</div>
+                    <div id="measurementsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 2: CICLO MENSTRUAL -->
+        <div id="cycle" class="tab-content">
+            <div class="content">
+                <div class="section">
+                    <div class="section-title">Tu Ciclo</div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Duración ciclo (días)</label>
+                            <input type="number" id="cycleDays" value="28" min="21" max="35">
+                        </div>
+                        <div class="input-group">
+                            <label>Primer día último período</label>
+                            <input type="date" id="lastPeriodDate">
+                        </div>
+                    </div>
+                    <button onclick="updateCycle()">Actualizar Ciclo</button>
+                </div>
+                
+                <div class="section">
+                    <div id="cycleInfo" class="summary-box">
+                        <p style="color: #999; text-align: center;">Completa la información del ciclo.</p>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Qué Esperar en Cada Fase</div>
+                    
+                    <div class="measurement-card">
+                        <div class="measurement-date">🔴 MENSTRUAL (Días 1-5)</div>
+                        <div class="symptoms-box">
+                            <strong>Síntomas esperados:</strong>
+                            Retención alta (2-3kg), baja energía, posible hinchazón, antojos de dulce y sal, cambios de apetito.
+                            <br><br>
+                            <strong>En tus medidas:</strong> Peso arriba, % grasa puede parecer más alta por retención.
+                            <br><br>
+                            <strong>Tu nutrición:</strong> Come normal, aumenta hierro (carnes rojas, espinaca), hidrátate más.
+                        </div>
+                    </div>
+                    
+                    <div class="measurement-card">
+                        <div class="measurement-date">🔵 FOLICULAR (Días 6-13)</div>
+                        <div class="symptoms-box">
+                            <strong>Síntomas esperados:</strong>
+                            Retención baja, energía alta, sin antojos, apetito normal, sin hinchazón.
+                            <br><br>
+                            <strong>En tus medidas:</strong> Peso baja (menos agua), ves cambios favorables, % grasa más bajo.
+                            <br><br>
+                            <strong>Tu entrenamiento:</strong> MEJOR fase para fuerza intensa. Recuperación rápida.
+                        </div>
+                    </div>
+                    
+                    <div class="measurement-card">
+                        <div class="measurement-date">🟠 OVULACIÓN (Días 14-15)</div>
+                        <div class="symptoms-box">
+                            <strong>Síntomas esperados:</strong>
+                            Retención mínima, máxima energía, sin antojos, apetito normal.
+                            <br><br>
+                            <strong>En tus medidas:</strong> Peso más bajo, composición más favorable.
+                            <br><br>
+                            <strong>Tu entrenamiento:</strong> Continúa con fuerza. Es el pico de rendimiento.
+                        </div>
+                    </div>
+                    
+                    <div class="measurement-card">
+                        <div class="measurement-date">🟣 LÚTEA (Días 16-28)</div>
+                        <div class="symptoms-box">
+                            <strong>Síntomas esperados:</strong>
+                            Retención alta (2-3kg), fatiga, ANTOJOS INTENSOS (PCOS empeora esto), hinchazón, apetito aumentado.
+                            <br><br>
+                            <strong>En tus medidas:</strong> Peso sube, cintura se infla, % grasa parece subir (es agua + PCOS).
+                            <br><br>
+                            <strong>Tu nutrición:</strong> Aumenta calorías +100-200 kcal, proteína MUY alta (para saciedad), agua extra, NO hagas déficit agresivo.
+                            <br><br>
+                            <strong>Tu entrenamiento:</strong> Reduce intensidad. Fuerza sobre cardio. Prioriza descanso.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 3: COMPARATIVAS -->
+        <div id="comparativas" class="tab-content">
+            <div class="content">
+                <div class="alert">
+                    <strong>🔍 Validar tu Rhino</strong><br>
+                    Ingresa medidas corporales para comparar con fórmulas occidentales.
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Mediciones Corporales (Opcional)</div>
+                    <div class="input-group">
+                        <label>Fecha (misma del Rhino)</label>
+                        <input type="date" id="compDate">
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Cintura (cm)</label>
+                            <input type="number" id="compWaist" min="50" max="150">
+                        </div>
+                        <div class="input-group">
+                            <label>Cuello (cm)</label>
+                            <input type="number" id="compNeck" min="25" max="50">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Cadera (cm)</label>
+                            <input type="number" id="compHip" min="50" max="150">
+                        </div>
+                        <div class="input-group">
+                            <label>Abdomen (cm)</label>
+                            <input type="number" id="compAbdomen" min="50" max="150">
+                        </div>
+                    </div>
+                    <button onclick="addComparison()">+ Agregar Comparativa</button>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Comparativas Registradas</div>
+                    <div id="comparisonsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB 4: PROGRESO -->
+        <div id="analytics" class="tab-content">
+            <div class="content">
+                <div class="section">
+                    <div class="section-title">Evolución de Grasa Corporal</div>
+                    <div class="chart-container">
+                        <canvas id="bodyFatChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Evolución de Músculo</div>
+                    <div class="chart-container">
+                        <canvas id="muscleChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Peso vs Composición</div>
+                    <div class="chart-container">
+                        <canvas id="compositionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div class="section-title">Retención de Agua vs Fase del Ciclo</div>
+                    <div class="chart-container">
+                        <canvas id="retentionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div id="progressSummary" class="alert">
+                    <p style="color: #999;">Registra al menos 2 mediciones para ver gráficos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let measurements = [];
+        let comparisons = [];
+        let charts = {};
+        
+        const RANGES_WOMEN = {
+            essential: { min: 10, max: 13, label: 'Esencial' },
+            athletes: { min: 14, max: 20, label: 'Atlético' },
+            fitness: { min: 21, max: 24, label: 'Fitness' },
+            average: { min: 25, max: 31, label: 'Promedio' },
+            obese: { min: 32, max: 100, label: 'Alto' }
+        };
+        
+        async function init() {
+            try {
+                const measurementsData = await window.storage?.get('liza_bitacora_full_measurements');
+                const comparisonsData = await window.storage?.get('liza_bitacora_full_comparisons');
+                const cycleData = await window.storage?.get('liza_bitacora_full_cycle');
+                
+                if (measurementsData?.value) measurements = JSON.parse(measurementsData.value);
+                if (comparisonsData?.value) comparisons = JSON.parse(comparisonsData.value);
+                if (cycleData?.value) {
+                    const cycle = JSON.parse(cycleData.value);
+                    document.getElementById('cycleDays').value = cycle.cycleDays || 28;
+                    document.getElementById('lastPeriodDate').value = cycle.lastPeriodDate || '';
+                }
+            } catch (e) {
+                console.log('Usando almacenamiento de sesión');
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('measureDate').value = today;
+            document.getElementById('compDate').value = today;
+            
+            renderMeasurements();
+            renderComparisons();
+            updateCycleDisplay();
+        }
+        
+        function updateSliderValue(sliderId) {
+            const slider = document.getElementById(sliderId);
+            const valueElement = document.getElementById(sliderId + 'Value');
+            valueElement.textContent = slider.value;
+        }
+        
+        function getBodyFatCategory(percentage) {
+            for (const [key, range] of Object.entries(RANGES_WOMEN)) {
+                if (percentage >= range.min && percentage <= range.max) {
+                    return { category: key, label: range.label };
+                }
+            }
+            return { category: 'obese', label: 'Alto' };
+        }
+        
+        function getInterpretation(m, prevM, cycle) {
+            let interpretation = '';
+            const weightChange = prevM ? m.weight - prevM.weight : 0;
+            const muscleChange = prevM ? m.muscleMass - prevM.muscleMass : 0;
+            const fatChange = prevM ? parseFloat(m.fatMass) - parseFloat(prevM.fatMass) : 0;
+            
+            // Contexto de ciclo
+            if (cycle.name === 'Lútea' && m.retention >= 7) {
+                interpretation += `🔴 <strong>Fase Lútea con retención alta (${m.retention}/10)</strong> - El peso arriba es principalmente agua + PCOS. No es grasa real. Aumenta proteína, no hagas déficit agresivo.`;
+            } else if (cycle.name === 'Menstrual') {
+                interpretation += `🔴 <strong>Fase Menstrual</strong> - Retención esperada. Si bajaste músculo es normal por pérdida de sangre. Come iron.`;
+            } else if (cycle.name === 'Folicular') {
+                interpretation += `🔵 <strong>Fase Folicular</strong> - Mejor momento. Menos retención, cambios favorables son reales.`;
+            } else if (cycle.name === 'Ovulación') {
+                interpretation += `🟠 <strong>Ovulación</strong> - Pico de rendimiento. Cambios son reales.`;
+            }
+            
+            // Análisis de cambios
+            if (prevM && (Math.abs(weightChange) > 0.3 || Math.abs(muscleChange) > 0.1)) {
+                interpretation += `<br><br>📊 <strong>Cambios:</strong> `;
+                
+                if (weightChange > 0 && fatChange < 0 && muscleChange > 0) {
+                    interpretation += `Peso ↑${weightChange.toFixed(1)}kg pero grasa ↓${Math.abs(fatChange).toFixed(1)}kg = <span class="green">GANANCIA MUSCULAR</span>. Excelente progreso.`;
+                } else if (weightChange < 0 && fatChange < 0 && muscleChange > 0) {
+                    interpretation += `Bajaste ${Math.abs(weightChange).toFixed(1)}kg de grasa ↓, ganaste ${muscleChange.toFixed(1)}kg de músculo ↑. <span class="green">DEFINICIÓN EXITOSA</span>.`;
+                } else if (weightChange > 0 && muscleChange > 0.2 && fatChange > 0) {
+                    interpretation += `Reteniendo agua (ciclo) pero ganando músculo = <span class="green">GANANCIA LIMPIA</span>.`;
+                } else if (fatChange > 0 && muscleChange < 0) {
+                    interpretation += `Bajaste músculo y subiste grasa. ⚠️ Asegúrate de comer proteína suficiente.`;
+                }
+            }
+            
+            // Alerta si hay antojos en fase lútea
+            if (m.cravings && cycle.name === 'Lútea') {
+                interpretation += `<br><br>🍫 <strong>Antojos en fase lútea (esperado con PCOS)</strong> - Es biológico, no falta de fuerza. Aumenta proteína y grasa saludable para saciedad.`;
+            }
+            
+            return interpretation;
+        }
+        
+        function addMeasurement() {
+            const date = document.getElementById('measureDate').value;
+            const weight = parseFloat(document.getElementById('rhiWeight').value);
+            const bodyFat = parseFloat(document.getElementById('rhiBodyFat').value);
+            const muscleMass = parseFloat(document.getElementById('rhiMuscleMass').value);
+            const leanMass = parseFloat(document.getElementById('rhiLeanMass').value);
+            const visceralFat = parseFloat(document.getElementById('rhiVisceralFat').value);
+            const bodyWater = parseFloat(document.getElementById('rhiBodyWater').value);
+            
+            // Síntomas
+            const retention = parseInt(document.getElementById('retention').value);
+            const inflation = parseInt(document.getElementById('inflation').value);
+            const energy = document.getElementById('energy').value;
+            const appetite = document.getElementById('appetite').value;
+            const cravings = document.getElementById('cravings').checked;
+            const bloating = document.getElementById('bloating').checked;
+            const notes = document.getElementById('notes').value;
+            
+            if (!date || !weight || !bodyFat || !muscleMass) {
+                alert('Por favor completa: Fecha, Peso, % Grasa, Músculo');
+                return;
+            }
+            
+            const fatMass = (weight * bodyFat) / 100;
+            const bmi = weight / (1.6 * 1.6);
+            const category = getBodyFatCategory(bodyFat);
+            const cycle = getCyclePhase(new Date(date));
+            
+            measurements.push({
+                date,
+                weight,
+                bodyFat,
+                muscleMass,
+                leanMass,
+                fatMass: fatMass.toFixed(1),
+                visceralFat,
+                bodyWater,
+                bmi: bmi.toFixed(1),
+                category,
+                cycle,
+                retention,
+                inflation,
+                energy,
+                appetite,
+                cravings,
+                bloating,
+                notes,
+                id: Date.now()
+            });
+            
+            measurements.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveMeasurements();
+            
+            document.getElementById('rhiWeight').value = '';
+            document.getElementById('rhiBodyFat').value = '';
+            document.getElementById('rhiMuscleMass').value = '';
+            document.getElementById('rhiLeanMass').value = '';
+            document.getElementById('rhiVisceralFat').value = '';
+            document.getElementById('rhiBodyWater').value = '';
+            document.getElementById('retention').value = 5;
+            document.getElementById('inflation').value = 5;
+            document.getElementById('energy').value = 'Normal';
+            document.getElementById('appetite').value = 'Normal';
+            document.getElementById('cravings').checked = false;
+            document.getElementById('bloating').checked = false;
+            document.getElementById('notes').value = '';
+            updateSliderValue('retention');
+            updateSliderValue('inflation');
+            
+            renderMeasurements();
+            updateCharts();
+            alert('✅ Medición registrada');
+        }
+        
+        async function saveMeasurements() {
+            try {
+                await window.storage?.set('liza_bitacora_full_measurements', JSON.stringify(measurements), false);
+            } catch (e) {}
+        }
+        
+        function removeMeasurement(id) {
+            measurements = measurements.filter(m => m.id !== id);
+            saveMeasurements();
+            renderMeasurements();
+            updateCharts();
+        }
+        
+        function renderMeasurements() {
+            const list = document.getElementById('measurementsList');
+            if (measurements.length === 0) {
+                list.innerHTML = '<p style="color: #999; text-align: center; padding: 15px;">Aún no hay mediciones.</p>';
+                return;
+            }
+            
+            list.innerHTML = [...measurements].reverse().map((m, idx) => {
+                const prevM = measurements[measurements.length - 2 - idx];
+                let muscleChange = '';
+                let fatChange = '';
+                let weightChange = '';
+                
+                if (prevM) {
+                    const mc = (m.muscleMass - prevM.muscleMass).toFixed(1);
+                    const fc = (parseFloat(m.fatMass) - parseFloat(prevM.fatMass)).toFixed(1);
+                    const wc = (m.weight - prevM.weight).toFixed(1);
+                    
+                    muscleChange = mc > 0 ? `<span class="green">↑ +${mc}kg</span>` : `<span class="red">↓ ${mc}kg</span>`;
+                    fatChange = fc > 0 ? `<span class="red">↑ +${fc}kg</span>` : `<span class="green">↓ ${fc}kg</span>`;
+                    weightChange = wc > 0 ? `<span class="red">↑ +${wc}kg</span>` : `<span class="green">↓ ${wc}kg</span>`;
+                }
+                
+                const interpretation = getInterpretation(m, prevM, m.cycle);
+                const symptomsText = [
+                    m.retention >= 7 ? `🌊 Retención ${m.retention}/10` : '',
+                    m.inflation >= 7 ? `💨 Inflamación ${m.inflation}/10` : '',
+                    m.energy === 'Baja' ? '😴 Energía baja' : '',
+                    m.cravings ? '🍫 Antojos' : '',
+                    m.bloating ? '💪 Hinchazón' : ''
+                ].filter(s => s).join(' • ');
+                
+                return `
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div>
+                                <div class="measurement-date">${new Date(m.date).toLocaleDateString('es-ES')}</div>
+                                <span class="cycle-badge cycle-${m.cycle.cssClass}">${m.cycle.name}</span>
+                            </div>
+                            <button class="remove-btn" onclick="removeMeasurement(${m.id})">✕</button>
+                        </div>
+                        
+                        ${interpretation ? `<div class="interpretation"><div class="interpretation-title">🎯 Análisis</div>${interpretation}</div>` : ''}
+                        
+                        ${symptomsText ? `<div class="symptoms-box"><strong>Síntomas:</strong> ${symptomsText}</div>` : ''}
+                        
+                        <div class="measurement-body">
+                            <div class="measurement-stat">
+                                <span class="stat-label">Peso</span>
+                                <span class="stat-value">${m.weight}kg</span>
+                                ${weightChange ? `<span class="stat-change">${weightChange}</span>` : ''}
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">% Grasa</span>
+                                <span class="stat-value">${m.bodyFat}%</span>
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">Masa Grasa</span>
+                                <span class="stat-value">${m.fatMass}kg</span>
+                                ${fatChange ? `<span class="stat-change">${fatChange}</span>` : ''}
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">Músculo</span>
+                                <span class="stat-value">${m.muscleMass}kg</span>
+                                ${muscleChange ? `<span class="stat-change">${muscleChange}</span>` : ''}
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">Lean Mass</span>
+                                <span class="stat-value">${m.leanMass}kg</span>
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">Visceral</span>
+                                <span class="stat-value">${m.visceralFat}</span>
+                            </div>
+                            <div class="measurement-stat">
+                                <span class="stat-label">% Agua</span>
+                                <span class="stat-value">${m.bodyWater}%</span>
+                            </div>
+                        </div>
+                        
+                        ${m.notes ? `<div style="font-size: 12px; color: #666; margin-top: 10px; padding: 8px; background: white; border-radius: 4px;"><strong>Notas:</strong> ${m.notes}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function calculateFormulas(weight, height, waist, neck, hip, abdomen, age = 31) {
+            const formulas = {};
+            
+            if (waist && neck && hip) {
+                try {
+                    const bf = 86.010 * Math.log10(waist + hip - neck) - 70.041 * Math.log10(height) + 36.76;
+                    formulas.navy = Math.max(0, bf).toFixed(1);
+                } catch (e) {}
+            }
+            
+            if (weight && height) {
+                const bmi = weight / (height / 100) / (height / 100);
+                const bf = (1.2 * bmi) + (0.23 * age) - 5.4;
+                formulas.deurenberg = Math.max(0, bf).toFixed(1);
+            }
+            
+            if (abdomen && height) {
+                try {
+                    const bf = (86.010 * Math.log10(abdomen - neck)) - (70.041 * Math.log10(height)) + 36.76;
+                    formulas.ymca = Math.max(0, bf).toFixed(1);
+                } catch (e) {}
+            }
+            
+            return formulas;
+        }
+        
+        function addComparison() {
+            const date = document.getElementById('compDate').value;
+            const waist = parseFloat(document.getElementById('compWaist').value);
+            const neck = parseFloat(document.getElementById('compNeck').value);
+            const hip = parseFloat(document.getElementById('compHip').value);
+            const abdomen = parseFloat(document.getElementById('compAbdomen').value);
+            
+            const rhino = measurements.find(m => m.date === date);
+            if (!rhino) {
+                alert('Primero registra una medición Rhino con esta fecha');
+                return;
+            }
+            
+            const formulas = calculateFormulas(rhino.weight, 160, waist, neck, hip, abdomen);
+            
+            comparisons.push({
+                date,
+                waist: waist || null,
+                neck: neck || null,
+                hip: hip || null,
+                abdomen: abdomen || null,
+                formulas,
+                rhino: parseFloat(rhino.bodyFat),
+                id: Date.now()
+            });
+            
+            comparisons.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveComparisons();
+            
+            document.getElementById('compWaist').value = '';
+            document.getElementById('compNeck').value = '';
+            document.getElementById('compHip').value = '';
+            document.getElementById('compAbdomen').value = '';
+            
+            renderComparisons();
+            alert('✅ Comparativa registrada');
+        }
+        
+        async function saveComparisons() {
+            try {
+                await window.storage?.set('liza_bitacora_full_comparisons', JSON.stringify(comparisons), false);
+            } catch (e) {}
+        }
+        
+        function removeComparison(id) {
+            comparisons = comparisons.filter(c => c.id !== id);
+            saveComparisons();
+            renderComparisons();
+        }
+        
+        function renderComparisons() {
+            const list = document.getElementById('comparisonsList');
+            if (comparisons.length === 0) {
+                list.innerHTML = '<p style="color: #999; text-align: center; padding: 15px;">Aún no hay comparativas.</p>';
+                return;
+            }
+            
+            list.innerHTML = comparisons.map(c => {
+                const diff = Math.abs(c.rhino - (c.formulas.navy || 0));
+                const consistent = diff < 3 ? '✅ Consistente' : '⚠️ Diferencia > 3%';
+                
+                return `
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div class="measurement-date">${new Date(c.date).toLocaleDateString('es-ES')}</div>
+                            <button class="remove-btn" onclick="removeComparison(${c.id})">✕</button>
+                        </div>
+                        <table class="comparison-table">
+                            <tr>
+                                <th>Método</th>
+                                <th>% Grasa</th>
+                            </tr>
+                            <tr>
+                                <td><strong>Rhino</strong></td>
+                                <td><strong>${c.rhino}%</strong></td>
+                            </tr>
+                            ${c.formulas.navy ? `<tr><td>Navy</td><td>${c.formulas.navy}%</td></tr>` : ''}
+                            ${c.formulas.deurenberg ? `<tr><td>Deurenberg</td><td>${c.formulas.deurenberg}%</td></tr>` : ''}
+                            ${c.formulas.ymca ? `<tr><td>YMCA</td><td>${c.formulas.ymca}%</td></tr>` : ''}
+                        </table>
+                        <div style="font-size: 12px; color: #667eea; font-weight: 600;">${consistent}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getCyclePhase(date) {
+            const lastPeriod = document.getElementById('lastPeriodDate').value;
+            if (!lastPeriod) return { name: 'Sin ciclo', cssClass: 'menstrual' };
+            
+            const cycleDays = parseInt(document.getElementById('cycleDays').value) || 28;
+            const daysSince = Math.floor((date - new Date(lastPeriod)) / (1000 * 60 * 60 * 24));
+            const dayInCycle = ((daysSince % cycleDays) + cycleDays) % cycleDays;
+            
+            if (dayInCycle < 5) return { name: 'Menstrual', cssClass: 'menstrual' };
+            if (dayInCycle < 13) return { name: 'Folicular', cssClass: 'follicular' };
+            if (dayInCycle < 15) return { name: 'Ovulación', cssClass: 'ovulation' };
+            return { name: 'Lútea', cssClass: 'luteal' };
+        }
+        
+        function updateCycle() {
+            saveCycle();
+            updateCycleDisplay();
+            renderMeasurements();
+        }
+        
+        async function saveCycle() {
+            try {
+                await window.storage?.set('liza_bitacora_full_cycle', JSON.stringify({
+                    cycleDays: parseInt(document.getElementById('cycleDays').value),
+                    lastPeriodDate: document.getElementById('lastPeriodDate').value
+                }), false);
+            } catch (e) {}
+        }
+        
+        function updateCycleDisplay() {
+            const lastPeriod = document.getElementById('lastPeriodDate').value;
+            if (!lastPeriod) {
+                document.getElementById('cycleInfo').innerHTML = '<p style="color: #999; text-align: center;">Registra el primer día de tu último período.</p>';
+                return;
+            }
+            
+            const today = new Date();
+            const cycleDays = parseInt(document.getElementById('cycleDays').value) || 28;
+            const daysSince = Math.floor((today - new Date(lastPeriod)) / (1000 * 60 * 60 * 24));
+            const dayInCycle = ((daysSince % cycleDays) + cycleDays) % cycleDays + 1;
+            const cycle = getCyclePhase(today);
+            
+            let description = '';
+            let emoji = '';
+            
+            if (dayInCycle < 5) {
+                description = 'Retención 2-3kg. Baja energía. Come iron. Antojos normales.';
+                emoji = '🔴';
+            } else if (dayInCycle < 13) {
+                description = 'Retención baja, peso favorece cambios. Energía alta.';
+                emoji = '🔵';
+            } else if (dayInCycle < 15) {
+                description = 'Máxima energía. Cambios favorables.';
+                emoji = '🟠';
+            } else {
+                description = 'Retención 2-3kg. Antojos INTENSOS (PCOS). Aumenta proteína +100-200 kcal. NO déficit agresivo.';
+                emoji = '🟣';
+            }
+            
+            const nextPeriod = new Date(new Date(lastPeriod).getTime() + (cycleDays - dayInCycle + 1) * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('cycleInfo').innerHTML = `
+                <div>
+                    <div style="font-size: 16px; font-weight: 600; color: #333; margin-bottom: 8px;">${emoji} ${cycle.name} - Día ${dayInCycle}/${cycleDays}</div>
+                    <div style="font-size: 12px; color: #555; line-height: 1.5;">${description}</div>
+                    <div style="font-size: 11px; color: #999; margin-top: 8px;">📅 Próxima menstruación: ${nextPeriod.toLocaleDateString('es-ES')}</div>
+                </div>
+            `;
+        }
+        
+        function updateCharts() {
+            if (measurements.length < 2) return;
+            
+            const dates = measurements.map(m => new Date(m.date).toLocaleDateString('es-ES'));
+            
+            Object.values(charts).forEach(chart => chart?.destroy?.());
+            charts = {};
+            
+            // Grasa corporal
+            const ctx1 = document.getElementById('bodyFatChart')?.getContext('2d');
+            if (ctx1) {
+                charts.bodyFat = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: '% Grasa Corporal',
+                            data: measurements.map(m => parseFloat(m.bodyFat)),
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+            
+            // Músculo
+            const ctx2 = document.getElementById('muscleChart')?.getContext('2d');
+            if (ctx2) {
+                charts.muscle = new Chart(ctx2, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Masa Muscular (kg)',
+                            data: measurements.map(m => m.muscleMass),
+                            borderColor: '#51cf66',
+                            backgroundColor: 'rgba(81, 207, 102, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            }
+            
+            // Composición
+            const ctx3 = document.getElementById('compositionChart')?.getContext('2d');
+            if (ctx3) {
+                charts.composition = new Chart(ctx3, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Peso Total (kg)',
+                                data: measurements.map(m => m.weight),
+                                borderColor: '#667eea',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Masa Grasa (kg)',
+                                data: measurements.map(m => parseFloat(m.fatMass)),
+                                borderColor: '#ff6b6b',
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Músculo (kg)',
+                                data: measurements.map(m => m.muscleMass),
+                                borderColor: '#51cf66',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+            
+            // Retención vs Ciclo
+            const ctx4 = document.getElementById('retentionChart')?.getContext('2d');
+            if (ctx4) {
+                charts.retention = new Chart(ctx4, {
+                    type: 'bar',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Retención de Agua (1-10)',
+                            data: measurements.map(m => m.retention),
+                            backgroundColor: measurements.map(m => {
+                                if (m.cycle.name === 'Menstrual') return '#ffe6e6';
+                                if (m.cycle.name === 'Folicular') return '#e6f3ff';
+                                if (m.cycle.name === 'Ovulación') return '#fff4e6';
+                                return '#f0e6ff';
+                            }),
+                            borderColor: measurements.map(m => {
+                                if (m.cycle.name === 'Menstrual') return '#c41e3a';
+                                if (m.cycle.name === 'Folicular') return '#0066cc';
+                                if (m.cycle.name === 'Ovulación') return '#cc6600';
+                                return '#6600cc';
+                            }),
+                            borderWidth: 2
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { max: 10 } } }
+                });
+            }
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'analytics') {
+                setTimeout(() => updateCharts(), 100);
+            }
+        }
+        
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
